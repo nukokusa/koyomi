@@ -9,5 +9,9 @@ lint: deps
 deps:
 	go get golang.org/x/lint/golint
 
+# install ${GOPATH}/bin/koyomi
+install:
+	cd ./cmd/koyomi && go install
+
 clean:
 	go clean
