@@ -1,5 +1,7 @@
 # koyomi
 
+[![CircleCI](https://circleci.com/gh/nukokusa/koyomi/tree/master.svg?style=svg)](https://circleci.com/gh/nukokusa/koyomi/tree/master)
+
 ## Example
 
 ```golang
