@@ -1,0 +1,12 @@
+version: 2
+jobs:
+  build:
+    docker:
+      - imaage: circleci/golang:1.11.4
+        environment:
+          GO111MODULE: "on"
+    steps:
+      - checkout
+      - run:
+        name: Run tests
+        command: make test
