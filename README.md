@@ -1,6 +1,8 @@
-# koyomi
+# Koyomi
 
 [![CircleCI](https://circleci.com/gh/nukokusa/koyomi/tree/master.svg?style=svg)](https://circleci.com/gh/nukokusa/koyomi/tree/master)
+
+Koyomi is a simple schedule client for Google Calendar.
 
 ## Example
 

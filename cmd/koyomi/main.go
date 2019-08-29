@@ -7,6 +7,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/hashicorp/logutils"
 	"github.com/nukokusa/koyomi"
 	"gopkg.in/yaml.v2"
 )
@@ -19,6 +20,7 @@ var (
 	description string
 	startAtStr  string
 	endAtStr    string
+	logLevel    string
 	startAt     time.Time
 	endAt       time.Time
 )
@@ -32,36 +34,48 @@ type Config struct {
 }
 
 func main() {
+	if len(os.Args) < 2 {
+		log.Fatal("[ERROR] required sub command")
+	}
+
 	f := flag.NewFlagSet(os.Args[1], flag.ExitOnError)
 	f.StringVar(&config, "config", "config.yml", "config yaml file")
 	f.StringVar(&key, "key", "", "event key")
 	f.StringVar(&uid, "uid", "", "event uid")
 	f.StringVar(&summary, "summary", "", "event summary")
 	f.StringVar(&description, "description", "", "event description")
-	f.StringVar(&startAtStr, "start-at", "", "event start at")
-	f.StringVar(&endAtStr, "end-at", "", "event end at")
+	f.StringVar(&startAtStr, "startat", "", "event start at")
+	f.StringVar(&endAtStr, "endat", "", "event end at")
+	f.StringVar(&logLevel, "loglevel", "INFO", "logging level: INFO, WARN, ERROR")
 	f.Parse(os.Args[2:])
+
+	logFilter := &logutils.LevelFilter{
+		Levels:   []logutils.LogLevel{"INFO", "WARN", "ERROR"},
+		MinLevel: logutils.LogLevel(logLevel),
+		Writer:   os.Stderr,
+	}
+	log.SetOutput(logFilter)
 
 	data, err := ioutil.ReadFile(config)
 	if err != nil {
-		log.Fatal("error open config file", err.Error())
+		log.Fatal("[ERROR] open config file", err.Error())
 	}
 
 	var conf Config
 	if err := yaml.Unmarshal(data, &conf); err != nil {
-		log.Fatal("error unmarshal config file", err.Error())
+		log.Fatal("[ERROR] unmarshal config file", err.Error())
 	}
 
 	if startAtStr != "" {
 		startAt, err = time.Parse(time.RFC3339, startAtStr)
 		if err != nil {
-			log.Fatal("error failed to parse start at", err.Error())
+			log.Fatal("[ERROR] failed to parse start at", err.Error())
 		}
 	}
 	if endAtStr != "" {
 		endAt, err = time.Parse(time.RFC3339, endAtStr)
 		if err != nil {
-			log.Fatal("error failed to parse end at", err.Error())
+			log.Fatal("[ERROR] failed to parse end at", err.Error())
 		}
 	}
 
@@ -73,7 +87,7 @@ func main() {
 	case "delete":
 		delete(&conf)
 	default:
-		log.Fatalf("error invalid sub command: %s", os.Args[1])
+		log.Fatalf("[ERROR] invalid sub command: %s", os.Args[1])
 	}
 }
 
@@ -101,7 +115,7 @@ func create(conf *Config) {
 	}
 
 	if err := srv.Create(event); err != nil {
-		log.Fatalf("koyomi.Create: failed to create: %s", err)
+		log.Fatalf("[ERROR] koyomi.Create: failed to create: %s", err)
 	}
 	return
 }
@@ -118,7 +132,7 @@ func update(conf *Config) {
 		EndAt:       endAt,
 	}
 	if err := srv.Update(event); err != nil {
-		log.Fatalf("koyomi.Update: failed to update: %s", err)
+		log.Fatalf("[ERROR] koyomi.Update: failed to update: %s", err)
 	}
 }
 
@@ -126,6 +140,6 @@ func delete(conf *Config) {
 	srv := service(conf)
 
 	if err := srv.Delete(key, uid); err != nil {
-		log.Fatalf("koyomi.Delete: failed to delete: %s", err)
+		log.Fatalf("[ERROR] koyomi.Delete: failed to delete: %s", err)
 	}
 }
