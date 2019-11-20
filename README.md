@@ -1,6 +1,10 @@
 # Koyomi
 
-[![CircleCI](https://circleci.com/gh/nukokusa/koyomi/tree/master.svg?style=svg)](https://circleci.com/gh/nukokusa/koyomi/tree/master)
+[![Test Status](https://github.com/nukokusa/koyomi/workflows/test/badge.svg?branch=master)][actions]
+[![MIT License](http://img.shields.io/badge/license-MIT-blue.svg?style=flat-square)][license]
+
+[actions]: https://github.com/nukokusa/koyomi/actions?workflow=test
+[license]: https://github.com/nukokusa/koyomi/blob/master/LICENSE
 
 Koyomi is a simple schedule client for Google Calendar.
 
