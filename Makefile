@@ -1,17 +1,15 @@
-.PHONY: test lint deps install clean
+GOBIN ?= $(shell go env GOPATH)/bin
 
-test: deps lint
-	go test -v ./...
+.PHONY: lint test install
 
-lint: deps
-	go vet -all -printfuncs=Criticalf,Infof,Warningf,Debugf,Tracef ./...
+lint: $(GOBIN)/staticcheck
+	staticcheck ./...
 
-deps:
-	go get golang.org/x/lint/golint
+test: lint
+	go test ./...
 
-# install ${GOPATH}/bin/koyomi
 install:
-	cd ./cmd/koyomi && go install
+	go install github.com/nukokusa/koyomi/cmd/koyomi
 
-clean:
-	go clean
+$(GOBIN)/staticcheck:
+	@go install honnef.co/go/tools/cmd/staticcheck@latest
