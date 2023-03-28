@@ -3,6 +3,7 @@ module github.com/nukokusa/koyomi
 go 1.20
 
 require (
+	github.com/Songmu/flextime v0.1.0
 	github.com/alecthomas/kong v0.7.1
 	github.com/google/go-cmp v0.5.9
 	github.com/hashicorp/logutils v1.0.0
