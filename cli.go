@@ -12,6 +12,7 @@ import (
 )
 
 type CLIOptions struct {
+	List           *ListOption      `cmd:"" help:"List events"`
 	Create         *CreateOption    `cmd:"" help:"Creates an event"`
 	Update         *UpdateOption    `cmd:"" help:"Updates an event"`
 	Delete         *DeleteOption    `cmd:"" help:"Deletes an event"`
@@ -49,6 +50,8 @@ func Run(ctx context.Context, args []string) error {
 
 func (k *Koyomi) Dispatch(ctx context.Context, command string, opts *CLIOptions) error {
 	switch command {
+	case "list":
+		return k.List(ctx, opts.List)
 	case "create":
 		return k.Create(ctx, opts.Create)
 	case "update":

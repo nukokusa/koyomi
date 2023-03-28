@@ -2,6 +2,8 @@ package koyomi
 
 import (
 	"context"
+	"sort"
+	"time"
 
 	"github.com/pkg/errors"
 	"google.golang.org/api/calendar/v3"
@@ -9,6 +11,7 @@ import (
 )
 
 type CalendarService interface {
+	List(ctx context.Context, calendarID string, startTime, endTime time.Time) ([]*calendar.Event, error)
 	Insert(ctx context.Context, calendarID string, event *calendar.Event) (*calendar.Event, error)
 	Patch(ctx context.Context, calendarID string, event *calendar.Event) (*calendar.Event, error)
 	Delete(ctx context.Context, calendarID, eventID string) error
@@ -26,6 +29,31 @@ func newCalendarService(ctx context.Context, credentialPath string) (CalendarSer
 	return &calendarService{
 		cs: cs,
 	}, nil
+}
+
+func (s *calendarService) List(ctx context.Context, calendarID string, startTime, endTime time.Time) ([]*calendar.Event, error) {
+	result := []*calendar.Event{}
+	pageToken := ""
+	for {
+		evs, err := s.cs.Events.List(calendarID).
+			TimeMin(startTime.Format(time.RFC3339)).
+			TimeMax(endTime.Format(time.RFC3339)).
+			SingleEvents(true).
+			PageToken(pageToken).
+			Context(ctx).Do()
+		if err != nil {
+			return nil, errors.Wrap(err, "error Events.List")
+		}
+		result = append(result, evs.Items...)
+		if evs.NextPageToken == "" {
+			break
+		}
+		pageToken = evs.NextPageToken
+	}
+	sort.Slice(result, func(i, j int) bool {
+		return result[i].Start.DateTime < result[j].Start.DateTime
+	})
+	return result, nil
 }
 
 func (s *calendarService) Insert(ctx context.Context, calendarID string, event *calendar.Event) (*calendar.Event, error) {

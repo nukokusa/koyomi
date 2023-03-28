@@ -13,10 +13,10 @@ import (
 
 type CreateOption struct {
 	CalendarID  string `required:"" help:"Calendar identifier"`
-	Summary     string `help:"Title of the event" short:"s"`
-	Description string `help:"Descriptuon of the event" short:"d"`
-	StartTime   string `required:"" help:"The start time of the event"`
-	EndTime     string `required:"" help:"The end time of the event"`
+	Summary     string `help:"Title of the event"`
+	Description string `help:"Descriptuon of the event"`
+	StartTime   string `required:"" help:"The start time of the event" short:"s"`
+	EndTime     string `required:"" help:"The end time of the event" short:"e"`
 }
 
 func (k *Koyomi) Create(ctx context.Context, opt *CreateOption) error {

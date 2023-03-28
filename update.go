@@ -13,10 +13,10 @@ import (
 type UpdateOption struct {
 	CalendarID  string `required:"" help:"Calendar identifier"`
 	EventID     string `required:"" help:"Identifier of the event"`
-	Summary     string `help:"Title of the event" short:"s"`
-	Description string `help:"Description of the event" short:"d"`
-	StartTime   string `help:"The start time of the event"`
-	EndTime     string `help:"The end time of the event"`
+	Summary     string `help:"Title of the event"`
+	Description string `help:"Description of the event"`
+	StartTime   string `help:"The start time of the event" short:"s"`
+	EndTime     string `help:"The end time of the event" short:"e"`
 }
 
 func (k *Koyomi) Update(ctx context.Context, opt *UpdateOption) error {
