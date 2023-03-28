@@ -1,45 +1,46 @@
 package koyomi
 
-import "github.com/pkg/errors"
+import (
+	"context"
+	"errors"
+	"time"
 
-type calendarMock struct {
-	calendarImpl
-	GetMock    func(key, uid string) (*Event, error)
-	CreateMock func(event *Event) error
-	UpdateMock func(event *Event) error
-	DeleteMock func(key, uid string) error
+	"google.golang.org/api/calendar/v3"
+)
+
+type calendarServiceMock struct {
+	ListMock   func(ctx context.Context, calendarID string, startTime, endTime time.Time) ([]*calendar.Event, error)
+	InsertMock func(ctx context.Context, calendarID string, event *calendar.Event) (*calendar.Event, error)
+	PatchMock  func(ctx context.Context, calendarID string, event *calendar.Event) (*calendar.Event, error)
+	DeleteMock func(ctx context.Context, calendarID, eventID string) error
 }
 
-func newCalendarMock() *calendarMock {
-	return &calendarMock{
-		calendarImpl: calendarImpl{},
-		GetMock: func(key, uid string) (*Event, error) {
-			return nil, errors.New("not implemented")
+func newCalendarServiceMock() *calendarServiceMock {
+	return &calendarServiceMock{
+		ListMock: func(ctx context.Context, calendarID string, startTime, endTime time.Time) ([]*calendar.Event, error) {
+			return nil, errors.New("not implememted")
 		},
-		CreateMock: func(event *Event) error {
-			return errors.New("not implmented")
+		InsertMock: func(ctx context.Context, calendarID string, event *calendar.Event) (*calendar.Event, error) {
+			return nil, errors.New("not implememted")
 		},
-		UpdateMock: func(event *Event) error {
-			return errors.New("not implmented")
+		PatchMock: func(ctx context.Context, calendarID string, event *calendar.Event) (*calendar.Event, error) {
+			return nil, errors.New("not implememted")
 		},
-		DeleteMock: func(key, uid string) error {
-			return errors.New("not implemented")
+		DeleteMock: func(ctx context.Context, calendarID, eventID string) error {
+			return errors.New("not implememted")
 		},
 	}
 }
 
-func (mock *calendarMock) Get(key, uid string) (*Event, error) {
-	return mock.GetMock(key, uid)
+func (s *calendarServiceMock) List(ctx context.Context, calendarID string, startTime, endTime time.Time) ([]*calendar.Event, error) {
+	return s.ListMock(ctx, calendarID, startTime, endTime)
 }
-
-func (mock *calendarMock) Create(event *Event) error {
-	return mock.CreateMock(event)
+func (s *calendarServiceMock) Insert(ctx context.Context, calendarID string, event *calendar.Event) (*calendar.Event, error) {
+	return s.InsertMock(ctx, calendarID, event)
 }
-
-func (mock *calendarMock) Update(event *Event) error {
-	return mock.UpdateMock(event)
+func (s *calendarServiceMock) Patch(ctx context.Context, calendarID string, event *calendar.Event) (*calendar.Event, error) {
+	return s.PatchMock(ctx, calendarID, event)
 }
-
-func (mock *calendarMock) Delete(key, uid string) error {
-	return mock.DeleteMock(key, uid)
+func (s *calendarServiceMock) Delete(ctx context.Context, calendarID, eventID string) error {
+	return s.DeleteMock(ctx, calendarID, eventID)
 }
