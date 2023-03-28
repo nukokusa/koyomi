@@ -6,45 +6,55 @@ import (
 	"time"
 
 	"github.com/pkg/errors"
+	"github.com/tkuchiki/parsetime"
 	"google.golang.org/api/calendar/v3"
 )
 
 type UpdateOption struct {
-	CalendarID  string `help:"calendar ID" name:"calendar-id"`
-	EventID     string `help:"event ID" name:"event-id"`
-	Summary     string `help:"event summary" name:"summary"`
-	Description string `help:"event descriptuon" name:"description"`
-	StartAt     string `help:"event start at" name:"start-at"`
-	EndAt       string `help:"event end at" name:"end-at"`
+	CalendarID  string `required:"" help:"Calendar identifier"`
+	EventID     string `required:"" help:"Identifier of the event"`
+	Summary     string `help:"Title of the event" short:"s"`
+	Description string `help:"Description of the event" short:"d"`
+	StartTime   string `help:"The start time of the event"`
+	EndTime     string `help:"The end time of the event"`
 }
 
 func (k *Koyomi) Update(ctx context.Context, opt *UpdateOption) error {
-	ev := &calendar.Event{}
-	if opt.Summary != "" {
-		ev.Summary = opt.Summary
+	event := &calendar.Event{
+		Id:          opt.EventID,
+		Summary:     opt.Summary,
+		Description: opt.Description,
 	}
-	if opt.Description != "" {
-		ev.Description = opt.Description
-	}
-	if opt.StartAt != "" {
-		startAt, err := time.ParseInLocation(layout, opt.StartAt, loc)
+	if opt.StartTime != "" {
+		p, err := parsetime.NewParseTime()
 		if err != nil {
-			return errors.Wrap(err, "error ParseInLocation")
+			return errors.Wrap(err, "error parsetime.NewParseTime")
 		}
-		ev.Start = &calendar.EventDateTime{DateTime: startAt.Format(time.RFC3339), TimeZone: locationName}
-	}
-	if opt.EndAt != "" {
-		endAt, err := time.ParseInLocation(layout, opt.EndAt, loc)
+		t, err := p.Parse(opt.StartTime)
 		if err != nil {
-			return errors.Wrap(err, "error ParseInLocation")
+			return errors.Wrap(err, "error Parse")
 		}
-		ev.End = &calendar.EventDateTime{DateTime: endAt.Format(time.RFC3339), TimeZone: locationName}
+		event.Start = &calendar.EventDateTime{DateTime: t.Format(time.RFC3339)}
 	}
-	if _, err := k.cs.Events.Patch(opt.CalendarID, opt.EventID, ev).Do(); err != nil {
-		return errors.Wrap(err, "error Events.Patch")
+	if opt.EndTime != "" {
+		p, err := parsetime.NewParseTime()
+		if err != nil {
+			return errors.Wrap(err, "error parsetime.NewParseTime")
+		}
+		t, err := p.Parse(opt.EndTime)
+		if err != nil {
+			return errors.Wrap(err, "error Parse")
+		}
+		event.End = &calendar.EventDateTime{DateTime: t.Format(time.RFC3339)}
 	}
 
-	log.Printf("[DEBUG] updated event: calendar_id=%s, event_id=%s", opt.CalendarID, ev.Id)
+	var err error
+	event, err = k.cs.Patch(ctx, opt.CalendarID, event)
+	if err != nil {
+		return errors.Wrap(err, "error Patch")
+	}
+
+	log.Printf("[DEBUG] updated event: CalendarID=%s, EventID=%s", opt.CalendarID, event.Id)
 
 	return nil
 }

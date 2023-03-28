@@ -7,48 +7,46 @@ import (
 	"time"
 
 	"github.com/pkg/errors"
+	"github.com/tkuchiki/parsetime"
 	"google.golang.org/api/calendar/v3"
 )
 
 type CreateOption struct {
-	CalendarID  string `help:"calendar ID" name:"calendar-id"`
-	Summary     string `help:"event summary" name:"summary"`
-	Description string `help:"event descriptuon" name:"description"`
-	StartAt     string `help:"event start at" name:"start-at"`
-	EndAt       string `help:"event end at" name:"end-at"`
+	CalendarID  string `required:"" help:"Calendar identifier"`
+	Summary     string `help:"Title of the event" short:"s"`
+	Description string `help:"Descriptuon of the event" short:"d"`
+	StartTime   string `required:"" help:"The start time of the event"`
+	EndTime     string `required:"" help:"The end time of the event"`
 }
 
 func (k *Koyomi) Create(ctx context.Context, opt *CreateOption) error {
-	ev := &calendar.Event{}
-	if opt.Summary != "" {
-		ev.Summary = opt.Summary
-	}
-	if opt.Description != "" {
-		ev.Description = opt.Description
-	}
-	if opt.StartAt != "" {
-		startAt, err := time.ParseInLocation(layout, opt.StartAt, loc)
-		if err != nil {
-			return errors.Wrap(err, "error ParseInLocation")
-		}
-		ev.Start = &calendar.EventDateTime{DateTime: startAt.Format(time.RFC3339)}
-	}
-	if opt.EndAt != "" {
-		endAt, err := time.ParseInLocation(layout, opt.EndAt, loc)
-		if err != nil {
-			return errors.Wrap(err, "error ParseInLocation")
-		}
-		ev.End = &calendar.EventDateTime{DateTime: endAt.Format(time.RFC3339)}
+	event := &calendar.Event{
+		Summary:     opt.Summary,
+		Description: opt.Description,
 	}
 
-	var err error
-	ev, err = k.cs.Events.Insert(opt.CalendarID, ev).Do()
+	p, err := parsetime.NewParseTime()
 	if err != nil {
-		return errors.Wrap(err, "error Events.Insert")
+		return errors.Wrap(err, "error parsetime.NewParseTime")
+	}
+	startTime, err := p.Parse(opt.StartTime)
+	if err != nil {
+		return errors.Wrap(err, "error Parse")
+	}
+	event.Start = &calendar.EventDateTime{DateTime: startTime.Format(time.RFC3339)}
+	endTime, err := p.Parse(opt.EndTime)
+	if err != nil {
+		return errors.Wrap(err, "error Parse")
+	}
+	event.End = &calendar.EventDateTime{DateTime: endTime.Format(time.RFC3339)}
+
+	event, err = k.cs.Insert(ctx, opt.CalendarID, event)
+	if err != nil {
+		return errors.Wrap(err, "error Insert")
 	}
 
-	log.Printf("[DEBUG] inserted event: calendar_id=%s, event_id=%s", opt.CalendarID, ev.Id)
-	fmt.Println(ev.Id)
+	log.Printf("[DEBUG] inserted event: CalendarID=%s, EventID=%s", opt.CalendarID, event.Id)
+	fmt.Println(event.Id)
 
 	return nil
 }

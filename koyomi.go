@@ -6,8 +6,6 @@ import (
 	"time"
 
 	"github.com/pkg/errors"
-	"google.golang.org/api/calendar/v3"
-	"google.golang.org/api/option"
 )
 
 var (
@@ -30,13 +28,13 @@ func init() {
 }
 
 type Koyomi struct {
-	cs *calendar.Service
+	cs CalendarService
 }
 
 func New(ctx context.Context, credentialPath string) (*Koyomi, error) {
-	cs, err := calendar.NewService(ctx, option.WithCredentialsFile(credentialPath))
+	cs, err := newCalendarService(ctx, credentialPath)
 	if err != nil {
-		return nil, errors.Wrap(err, "error calendar.NewService")
+		return nil, errors.Wrap(err, "error newCalendarService")
 	}
 	return &Koyomi{
 		cs: cs,

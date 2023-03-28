@@ -12,12 +12,12 @@ import (
 )
 
 type CLIOptions struct {
-	Create         *CreateOption    `cmd:"" help:"create event"`
-	Update         *UpdateOption    `cmd:"" help:"update event"`
-	Delete         *DeleteOption    `cmd:"" help:"delete event"`
-	CredentialPath string           `help:"JSON credential file for access to calendar" name:"credential" default:"credential.json"`
-	LogLevel       string           `help:"logging level: DEBUG, INFO, WARN, ERROR" enum:"DEBUG,INFO,WARN,ERROR" name:"loglevel" default:"INFO"`
-	Version        kong.VersionFlag `help:"show Version" name:"version" short:"v"`
+	Create         *CreateOption    `cmd:"" help:"Creates an event"`
+	Update         *UpdateOption    `cmd:"" help:"Updates an event"`
+	Delete         *DeleteOption    `cmd:"" help:"Deletes an event"`
+	CredentialPath string           `name:"credential" help:"JSON credential file for access to calendar" default:"credential.json"`
+	LogLevel       string           `name:"loglevel" help:"Logging level: DEBUG, INFO, WARN, ERROR" enum:"DEBUG,INFO,WARN,ERROR" default:"INFO"`
+	Version        kong.VersionFlag `short:"v" help:"Show Version"`
 }
 
 func Run(ctx context.Context, args []string) error {
