@@ -2,13 +2,11 @@ package koyomi
 
 import (
 	"context"
-	"fmt"
+	"encoding/json"
 	"log"
-	"time"
 
 	"github.com/pkg/errors"
 	"github.com/tkuchiki/parsetime"
-	"google.golang.org/api/calendar/v3"
 )
 
 type CreateOption struct {
@@ -20,11 +18,6 @@ type CreateOption struct {
 }
 
 func (k *Koyomi) Create(ctx context.Context, opt *CreateOption) error {
-	event := &calendar.Event{
-		Summary:     opt.Summary,
-		Description: opt.Description,
-	}
-
 	p, err := parsetime.NewParseTime()
 	if err != nil {
 		return errors.Wrap(err, "error parsetime.NewParseTime")
@@ -33,20 +26,26 @@ func (k *Koyomi) Create(ctx context.Context, opt *CreateOption) error {
 	if err != nil {
 		return errors.Wrap(err, "error Parse")
 	}
-	event.Start = &calendar.EventDateTime{DateTime: startTime.Format(time.RFC3339)}
 	endTime, err := p.Parse(opt.EndTime)
 	if err != nil {
 		return errors.Wrap(err, "error Parse")
 	}
-	event.End = &calendar.EventDateTime{DateTime: endTime.Format(time.RFC3339)}
 
+	event := &Event{
+		Summary:     opt.Summary,
+		Description: opt.Description,
+		StartTime:   startTime,
+		EndTime:     endTime,
+	}
 	event, err = k.cs.Insert(ctx, opt.CalendarID, event)
 	if err != nil {
 		return errors.Wrap(err, "error Insert")
 	}
 
-	log.Printf("[DEBUG] inserted event: CalendarID=%s, EventID=%s", opt.CalendarID, event.Id)
-	fmt.Println(event.Id)
+	log.Printf("[DEBUG] inserted event: CalendarID=%s, ID=%s", opt.CalendarID, event.ID)
 
+	if err := json.NewEncoder(k.stdout).Encode(event); err != nil {
+		return errors.Wrap(err, "error Encode")
+	}
 	return nil
 }

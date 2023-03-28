@@ -2,17 +2,16 @@ package koyomi
 
 import (
 	"context"
+	"encoding/json"
 	"log"
-	"time"
 
 	"github.com/pkg/errors"
 	"github.com/tkuchiki/parsetime"
-	"google.golang.org/api/calendar/v3"
 )
 
 type UpdateOption struct {
 	CalendarID  string `required:"" help:"Calendar identifier"`
-	EventID     string `required:"" help:"Identifier of the event"`
+	ID          string `required:"" help:"Identifier of the event"`
 	Summary     string `help:"Title of the event"`
 	Description string `help:"Description of the event"`
 	StartTime   string `help:"The start time of the event" short:"s"`
@@ -20,11 +19,12 @@ type UpdateOption struct {
 }
 
 func (k *Koyomi) Update(ctx context.Context, opt *UpdateOption) error {
-	event := &calendar.Event{
-		Id:          opt.EventID,
+	event := &Event{
+		ID:          opt.ID,
 		Summary:     opt.Summary,
 		Description: opt.Description,
 	}
+
 	if opt.StartTime != "" {
 		p, err := parsetime.NewParseTime()
 		if err != nil {
@@ -34,7 +34,7 @@ func (k *Koyomi) Update(ctx context.Context, opt *UpdateOption) error {
 		if err != nil {
 			return errors.Wrap(err, "error Parse")
 		}
-		event.Start = &calendar.EventDateTime{DateTime: t.Format(time.RFC3339)}
+		event.StartTime = t
 	}
 	if opt.EndTime != "" {
 		p, err := parsetime.NewParseTime()
@@ -45,7 +45,7 @@ func (k *Koyomi) Update(ctx context.Context, opt *UpdateOption) error {
 		if err != nil {
 			return errors.Wrap(err, "error Parse")
 		}
-		event.End = &calendar.EventDateTime{DateTime: t.Format(time.RFC3339)}
+		event.EndTime = t
 	}
 
 	var err error
@@ -54,7 +54,10 @@ func (k *Koyomi) Update(ctx context.Context, opt *UpdateOption) error {
 		return errors.Wrap(err, "error Patch")
 	}
 
-	log.Printf("[DEBUG] updated event: CalendarID=%s, EventID=%s", opt.CalendarID, event.Id)
+	log.Printf("[DEBUG] updated event: CalendarID=%s, ID=%s", opt.CalendarID, event.ID)
 
+	if err := json.NewEncoder(k.stdout).Encode(event); err != nil {
+		return errors.Wrap(err, "error Encode")
+	}
 	return nil
 }

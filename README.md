@@ -26,10 +26,10 @@ Commands:
   create --calendar-id=STRING --start-time=STRING --end-time=STRING
     Creates an event
 
-  update --calendar-id=STRING --event-id=STRING
+  update --calendar-id=STRING --id=STRING
     Updates an event
 
-  delete --calendar-id=STRING --event-id=STRING
+  delete --calendar-id=STRING --id=STRING
     Deletes an event
 ```
 
@@ -64,13 +64,13 @@ Flags:
 ### Updates an Event
 
 ```
-Usage: koyomi update --calendar-id=STRING --event-id=STRING
+Usage: koyomi update --calendar-id=STRING --id=STRING
 
 Updates an event
 
 Flags:
       --calendar-id=STRING              Calendar identifier
-      --event-id=STRING                 Identifier of the event
+      --id=STRING                       Identifier of the event
       --summary=STRING                  Title of the event
       --description=STRING              Description of the event
   -s, --start-time=STRING               The start time of the event
@@ -80,11 +80,11 @@ Flags:
 ### Deletes an Event
 
 ```
-Usage: koyomi delete --calendar-id=STRING --event-id=STRING
+Usage: koyomi delete --calendar-id=STRING --id=STRING
 
 Deletes an event
 
 Flags:
       --calendar-id=STRING              Calendar identifier
-      --event-id=STRING                 Identifier of the event
+      --id=STRING                       Identifier of the event
 ```

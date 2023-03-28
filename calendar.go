@@ -10,10 +10,42 @@ import (
 	"google.golang.org/api/option"
 )
 
+type Event struct {
+	ID          string    `json:"id"`
+	Summary     string    `json:"summary"`
+	Description string    `json:"description"`
+	StartTime   time.Time `json:"start_time"`
+	EndTime     time.Time `json:"end_time"`
+}
+
+func NewEvent(ev *calendar.Event) (*Event, error) {
+	var startTime, endTime time.Time
+	var err error
+	if ev.Start != nil {
+		startTime, err = time.Parse(time.RFC3339, ev.Start.DateTime)
+		if err != nil {
+			return nil, errors.Wrap(err, "error Parse")
+		}
+	}
+	if ev.End != nil {
+		endTime, err = time.Parse(time.RFC3339, ev.End.DateTime)
+		if err != nil {
+			return nil, errors.Wrap(err, "error Parse")
+		}
+	}
+	return &Event{
+		ID:          ev.Id,
+		Summary:     ev.Summary,
+		Description: ev.Description,
+		StartTime:   startTime,
+		EndTime:     endTime,
+	}, nil
+}
+
 type CalendarService interface {
-	List(ctx context.Context, calendarID string, startTime, endTime time.Time) ([]*calendar.Event, error)
-	Insert(ctx context.Context, calendarID string, event *calendar.Event) (*calendar.Event, error)
-	Patch(ctx context.Context, calendarID string, event *calendar.Event) (*calendar.Event, error)
+	List(ctx context.Context, calendarID string, startTime, endTime time.Time) ([]*Event, error)
+	Insert(ctx context.Context, calendarID string, event *Event) (*Event, error)
+	Patch(ctx context.Context, calendarID string, event *Event) (*Event, error)
 	Delete(ctx context.Context, calendarID, eventID string) error
 }
 
@@ -31,11 +63,11 @@ func newCalendarService(ctx context.Context, credentialPath string) (CalendarSer
 	}, nil
 }
 
-func (s *calendarService) List(ctx context.Context, calendarID string, startTime, endTime time.Time) ([]*calendar.Event, error) {
-	result := []*calendar.Event{}
+func (s *calendarService) List(ctx context.Context, calendarID string, startTime, endTime time.Time) ([]*Event, error) {
 	pageToken := ""
+	evs := []*calendar.Event{}
 	for {
-		evs, err := s.cs.Events.List(calendarID).
+		es, err := s.cs.Events.List(calendarID).
 			TimeMin(startTime.Format(time.RFC3339)).
 			TimeMax(endTime.Format(time.RFC3339)).
 			SingleEvents(true).
@@ -44,32 +76,73 @@ func (s *calendarService) List(ctx context.Context, calendarID string, startTime
 		if err != nil {
 			return nil, errors.Wrap(err, "error Events.List")
 		}
-		result = append(result, evs.Items...)
-		if evs.NextPageToken == "" {
+		evs = append(evs, es.Items...)
+		if es.NextPageToken == "" {
 			break
 		}
-		pageToken = evs.NextPageToken
+		pageToken = es.NextPageToken
+	}
+
+	result := make([]*Event, 0, len(evs))
+	for _, ev := range evs {
+		event, err := NewEvent(ev)
+		if err != nil {
+			return nil, errors.Wrap(err, "error NewEvent")
+		}
+		result = append(result, event)
 	}
 	sort.Slice(result, func(i, j int) bool {
-		return result[i].Start.DateTime < result[j].Start.DateTime
+		return result[i].StartTime.Before(result[j].StartTime)
 	})
 	return result, nil
 }
 
-func (s *calendarService) Insert(ctx context.Context, calendarID string, event *calendar.Event) (*calendar.Event, error) {
-	ev, err := s.cs.Events.Insert(calendarID, event).Context(ctx).Do()
+func (s *calendarService) Insert(ctx context.Context, calendarID string, event *Event) (*Event, error) {
+	ev := &calendar.Event{
+		Id:          event.ID,
+		Summary:     event.Summary,
+		Description: event.Description,
+		Start: &calendar.EventDateTime{
+			DateTime: event.StartTime.Format(time.RFC3339),
+		},
+		End: &calendar.EventDateTime{
+			DateTime: event.EndTime.Format(time.RFC3339),
+		},
+	}
+	ev, err := s.cs.Events.Insert(calendarID, ev).Context(ctx).Do()
 	if err != nil {
 		return nil, errors.Wrap(err, "error Events.Insert")
 	}
-	return ev, nil
+
+	result, err := NewEvent(ev)
+	if err != nil {
+		return nil, errors.Wrap(err, "error NewEvent")
+	}
+	return result, nil
 }
 
-func (s *calendarService) Patch(ctx context.Context, calendarID string, event *calendar.Event) (*calendar.Event, error) {
-	ev, err := s.cs.Events.Patch(calendarID, event.Id, event).Context(ctx).Do()
+func (s *calendarService) Patch(ctx context.Context, calendarID string, event *Event) (*Event, error) {
+	ev := &calendar.Event{
+		Id:          event.ID,
+		Summary:     event.Summary,
+		Description: event.Description,
+	}
+	if !event.StartTime.IsZero() {
+		ev.Start.DateTime = event.StartTime.Format(time.RFC3339)
+	}
+	if !event.EndTime.IsZero() {
+		ev.End.DateTime = event.EndTime.Format(time.RFC3339)
+	}
+	ev, err := s.cs.Events.Patch(calendarID, ev.Id, ev).Context(ctx).Do()
 	if err != nil {
 		return nil, errors.Wrap(err, "error Events.Patch")
 	}
-	return ev, nil
+
+	result, err := NewEvent(ev)
+	if err != nil {
+		return nil, errors.Wrap(err, "error NewEvent")
+	}
+	return result, nil
 }
 
 func (s *calendarService) Delete(ctx context.Context, calendarID, eventID string) error {

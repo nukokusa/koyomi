@@ -9,15 +9,15 @@ import (
 
 type DeleteOption struct {
 	CalendarID string `required:"" help:"Calendar identifier"`
-	EventID    string `required:"" help:"Identifier of the event"`
+	ID         string `required:"" help:"Identifier of the event"`
 }
 
 func (k *Koyomi) Delete(ctx context.Context, opt *DeleteOption) error {
-	if err := k.cs.Delete(ctx, opt.CalendarID, opt.EventID); err != nil {
+	if err := k.cs.Delete(ctx, opt.CalendarID, opt.ID); err != nil {
 		return errors.Wrap(err, "error Delete")
 	}
 
-	log.Printf("[DEBUG] deleted event: CalendarID=%s, EventID=%s", opt.CalendarID, opt.EventID)
+	log.Printf("[DEBUG] deleted event: CalendarID=%s, ID=%s", opt.CalendarID, opt.ID)
 
 	return nil
 }

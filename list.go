@@ -2,9 +2,8 @@ package koyomi
 
 import (
 	"context"
-	"os"
+	"encoding/json"
 
-	"github.com/olekukonko/tablewriter"
 	"github.com/pkg/errors"
 	"github.com/tkuchiki/parsetime"
 )
@@ -34,22 +33,8 @@ func (k *Koyomi) List(ctx context.Context, opt *ListOption) error {
 		return errors.Wrap(err, "error List")
 	}
 
-	rows := make([][]string, 0, len(events))
-	for _, event := range events {
-		rows = append(rows, []string{
-			event.Id,
-			event.Summary,
-			event.Start.DateTime,
-			event.End.DateTime,
-		})
+	if err := json.NewEncoder(k.stdout).Encode(events); err != nil {
+		return errors.Wrap(err, "error Encode")
 	}
-
-	table := tablewriter.NewWriter(os.Stdout)
-	table.SetHeader([]string{"id", "summary", "start_time", "end_time"})
-	table.SetBorders(tablewriter.Border{Left: true, Top: false, Right: true, Bottom: false})
-	table.SetCenterSeparator("|")
-	table.AppendBulk(rows)
-	table.Render()
-
 	return nil
 }
