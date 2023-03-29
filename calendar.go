@@ -105,7 +105,7 @@ func (s *calendarService) List(ctx context.Context, calendarID string, startTime
 			}
 			if apiError, ok := err.(*googleapi.Error); ok {
 				if apiError.Code == http.StatusTooManyRequests {
-					log.Printf("[WARN] reached to TooManyRequests: CalendarID=%s", calendarID)
+					log.Printf("[WARN] reached to Too Many Requests: calendar_id=%s", calendarID)
 					continue
 				}
 			}
