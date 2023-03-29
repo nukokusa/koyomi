@@ -8,6 +8,7 @@ require (
 	github.com/google/go-cmp v0.5.9
 	github.com/hashicorp/logutils v1.0.0
 	github.com/pkg/errors v0.9.1
+	github.com/shogo82148/go-retry v1.1.1
 	github.com/tkuchiki/parsetime v0.3.0
 	google.golang.org/api v0.114.0
 )

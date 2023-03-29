@@ -54,7 +54,7 @@ func (k *Koyomi) Update(ctx context.Context, opt *UpdateOption) error {
 		return errors.Wrap(err, "error Patch")
 	}
 
-	log.Printf("[DEBUG] updated event: CalendarID=%s, ID=%s", opt.CalendarID, event.ID)
+	log.Printf("[DEBUG] updated event: calendar_id=%s, id=%s", opt.CalendarID, event.ID)
 
 	if err := json.NewEncoder(k.stdout).Encode(event); err != nil {
 		return errors.Wrap(err, "error Encode")
