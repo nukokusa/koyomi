@@ -1,13 +1,12 @@
 package koyomi_test
 
 import (
+	"bytes"
 	"context"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/nukokusa/koyomi"
-	"google.golang.org/api/calendar/v3"
 )
 
 func TestKoyomi_Update(t *testing.T) {
@@ -15,19 +14,19 @@ func TestKoyomi_Update(t *testing.T) {
 
 	ctx := context.Background()
 
-	var result *calendar.Event
 	cs := koyomi.NewCalendarServiceMock()
-	cs.PatchMock = func(ctx context.Context, calendarID string, event *calendar.Event) (*calendar.Event, error) {
-		result = event
+	cs.PatchMock = func(ctx context.Context, calendarID string, event *koyomi.Event) (*koyomi.Event, error) {
 		return event, nil
 	}
 
 	k := &koyomi.Koyomi{}
 	k.SetCalendarService(cs)
+	var b bytes.Buffer
+	k.SetStdout(&b)
 
 	opt := &koyomi.UpdateOption{
 		CalendarID:  "dummy-calendar-id",
-		EventID:     "dummy-id",
+		ID:          "dummy-id",
 		Summary:     "dummy-summary",
 		Description: "dummy-description",
 		StartTime:   "2023-03-01 12:00:00",
@@ -38,22 +37,9 @@ func TestKoyomi_Update(t *testing.T) {
 		t.Fatal("error Update", err)
 	}
 
-	expected := &calendar.Event{
-		Id:          "dummy-id",
-		Summary:     "dummy-summary",
-		Description: "dummy-description",
-		Start: &calendar.EventDateTime{
-			DateTime: "2023-03-01T12:00:00+09:00",
-		},
-		End: &calendar.EventDateTime{
-			DateTime: "2023-03-02T13:00:00+09:00",
-		},
-	}
-
-	opts := []cmp.Option{
-		cmpopts.IgnoreUnexported(calendar.Event{}, calendar.EventDateTime{}),
-	}
-	if diff := cmp.Diff(expected, result, opts...); diff != "" {
+	expected := `{"id":"dummy-id","summary":"dummy-summary","description":"dummy-description","start_time":"2023-03-01T12:00:00+09:00","end_time":"2023-03-02T13:00:00+09:00"}
+`
+	if diff := cmp.Diff(expected, b.String()); diff != "" {
 		t.Errorf("error mismatch (-want +got):\n%s", diff)
 	}
 }

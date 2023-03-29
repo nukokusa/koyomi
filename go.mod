@@ -3,10 +3,10 @@ module github.com/nukokusa/koyomi
 go 1.20
 
 require (
+	github.com/Songmu/flextime v0.1.0
 	github.com/alecthomas/kong v0.7.1
 	github.com/google/go-cmp v0.5.9
 	github.com/hashicorp/logutils v1.0.0
-	github.com/olekukonko/tablewriter v0.0.5
 	github.com/pkg/errors v0.9.1
 	github.com/tkuchiki/parsetime v0.3.0
 	google.golang.org/api v0.114.0
@@ -20,8 +20,6 @@ require (
 	github.com/google/uuid v1.3.0 // indirect
 	github.com/googleapis/enterprise-certificate-proxy v0.2.3 // indirect
 	github.com/googleapis/gax-go/v2 v2.7.1 // indirect
-	github.com/mattn/go-runewidth v0.0.13 // indirect
-	github.com/rivo/uniseg v0.2.0 // indirect
 	github.com/tkuchiki/go-timezone v0.2.2 // indirect
 	go.opencensus.io v0.24.0 // indirect
 	golang.org/x/net v0.8.0 // indirect

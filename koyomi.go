@@ -2,7 +2,9 @@ package koyomi
 
 import (
 	"context"
+	"io"
 	"log"
+	"os"
 	"time"
 
 	"github.com/pkg/errors"
@@ -28,7 +30,8 @@ func init() {
 }
 
 type Koyomi struct {
-	cs CalendarService
+	cs     CalendarService
+	stdout io.Writer
 }
 
 func New(ctx context.Context, credentialPath string) (*Koyomi, error) {
@@ -37,6 +40,7 @@ func New(ctx context.Context, credentialPath string) (*Koyomi, error) {
 		return nil, errors.Wrap(err, "error newCalendarService")
 	}
 	return &Koyomi{
-		cs: cs,
+		cs:     cs,
+		stdout: os.Stdout,
 	}, nil
 }
