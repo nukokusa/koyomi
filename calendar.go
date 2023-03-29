@@ -4,7 +4,6 @@ import (
 	"context"
 	"log"
 	"net/http"
-	"sort"
 	"time"
 
 	"github.com/pkg/errors"
@@ -91,6 +90,7 @@ func (s *calendarService) List(ctx context.Context, calendarID string, startTime
 	req := s.cs.Events.List(calendarID).
 		TimeMin(startTime.Format(time.RFC3339)).
 		TimeMax(endTime.Format(time.RFC3339)).
+		OrderBy("startTime").
 		SingleEvents(true)
 
 	pageToken := ""
@@ -126,9 +126,6 @@ func (s *calendarService) List(ctx context.Context, calendarID string, startTime
 		}
 		result = append(result, event)
 	}
-	sort.Slice(result, func(i, j int) bool {
-		return result[i].StartTime.Before(result[j].StartTime)
-	})
 	return result, nil
 }
 
