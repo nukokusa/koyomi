@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"log"
 
+	"github.com/Songmu/flextime"
 	"github.com/pkg/errors"
 	"github.com/tkuchiki/parsetime"
 )
@@ -13,8 +14,8 @@ type CreateOption struct {
 	CalendarID  string `required:"" help:"Calendar identifier"`
 	Summary     string `help:"Title of the event"`
 	Description string `help:"Descriptuon of the event"`
-	StartTime   string `required:"" help:"The start time of the event" short:"s"`
-	EndTime     string `required:"" help:"The end time of the event" short:"e"`
+	StartTime   string `help:"The start time of the event" short:"s"`
+	EndTime     string `help:"The end time of the event" short:"e"`
 }
 
 func (k *Koyomi) Create(ctx context.Context, opt *CreateOption) error {
@@ -22,13 +23,19 @@ func (k *Koyomi) Create(ctx context.Context, opt *CreateOption) error {
 	if err != nil {
 		return errors.Wrap(err, "error parsetime.NewParseTime")
 	}
-	startTime, err := p.Parse(opt.StartTime)
-	if err != nil {
-		return errors.Wrap(err, "error Parse")
+	startTime := flextime.Now()
+	if opt.StartTime != "" {
+		startTime, err = p.Parse(opt.StartTime)
+		if err != nil {
+			return errors.Wrap(err, "error Parse")
+		}
 	}
-	endTime, err := p.Parse(opt.EndTime)
-	if err != nil {
-		return errors.Wrap(err, "error Parse")
+	endTime := flextime.Now()
+	if opt.EndTime != "" {
+		endTime, err = p.Parse(opt.EndTime)
+		if err != nil {
+			return errors.Wrap(err, "error Parse")
+		}
 	}
 
 	event := &Event{
