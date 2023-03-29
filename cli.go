@@ -23,7 +23,7 @@ type CLIOptions struct {
 
 func Run(ctx context.Context, args []string) error {
 	var opts CLIOptions
-	parser, err := kong.New(&opts, kong.Vars{"version": "app " + Version})
+	parser, err := kong.New(&opts, kong.Vars{"version": "koyomi " + Version})
 	if err != nil {
 		return err
 	}
