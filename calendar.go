@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/pkg/errors"
+	"github.com/tkuchiki/parsetime"
 	"google.golang.org/api/calendar/v3"
 	"google.golang.org/api/option"
 )
@@ -20,15 +21,26 @@ type Event struct {
 
 func NewEvent(ev *calendar.Event) (*Event, error) {
 	var startTime, endTime time.Time
-	var err error
+	p, err := parsetime.NewParseTime()
+	if err != nil {
+		return nil, errors.Wrap(err, "error parsetime.NewParseTime")
+	}
 	if ev.Start != nil {
-		startTime, err = time.Parse(time.RFC3339, ev.Start.DateTime)
+		v := ev.Start.DateTime
+		if v == "" {
+			v = ev.Start.Date
+		}
+		startTime, err = p.Parse(v)
 		if err != nil {
 			return nil, errors.Wrap(err, "error Parse")
 		}
 	}
 	if ev.End != nil {
-		endTime, err = time.Parse(time.RFC3339, ev.End.DateTime)
+		v := ev.End.DateTime
+		if v == "" {
+			v = ev.End.Date
+		}
+		endTime, err = p.Parse(v)
 		if err != nil {
 			return nil, errors.Wrap(err, "error Parse")
 		}
