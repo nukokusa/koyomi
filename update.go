@@ -49,9 +49,9 @@ func (k *Koyomi) Update(ctx context.Context, opt *UpdateOption) error {
 	}
 
 	var err error
-	event, err = k.cs.Patch(ctx, opt.CalendarID, event)
+	event, err = k.cs.Update(ctx, opt.CalendarID, event)
 	if err != nil {
-		return errors.Wrap(err, "error Patch")
+		return errors.Wrap(err, "error Update")
 	}
 
 	log.Printf("[DEBUG] updated event: calendar_id=%s, id=%s", opt.CalendarID, event.ID)

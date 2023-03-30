@@ -15,7 +15,7 @@ func TestKoyomi_Update(t *testing.T) {
 	ctx := context.Background()
 
 	cs := koyomi.NewCalendarServiceMock()
-	cs.PatchMock = func(ctx context.Context, calendarID string, event *koyomi.Event) (*koyomi.Event, error) {
+	cs.UpdateMock = func(ctx context.Context, calendarID string, event *koyomi.Event) (*koyomi.Event, error) {
 		return event, nil
 	}
 

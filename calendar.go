@@ -22,7 +22,7 @@ type Event struct {
 	EndTime     time.Time `json:"end_time"`
 }
 
-func NewEvent(ev *calendar.Event) (*Event, error) {
+func newEvent(ev *calendar.Event) (*Event, error) {
 	var startTime, endTime time.Time
 	p, err := parsetime.NewParseTime()
 	if err != nil {
@@ -60,7 +60,7 @@ func NewEvent(ev *calendar.Event) (*Event, error) {
 type CalendarService interface {
 	List(ctx context.Context, calendarID string, startTime, endTime time.Time) ([]*Event, error)
 	Insert(ctx context.Context, calendarID string, event *Event) (*Event, error)
-	Patch(ctx context.Context, calendarID string, event *Event) (*Event, error)
+	Update(ctx context.Context, calendarID string, event *Event) (*Event, error)
 	Delete(ctx context.Context, calendarID, eventID string) error
 }
 
@@ -120,9 +120,9 @@ func (s *calendarService) List(ctx context.Context, calendarID string, startTime
 
 	result := make([]*Event, 0, len(evs))
 	for _, ev := range evs {
-		event, err := NewEvent(ev)
+		event, err := newEvent(ev)
 		if err != nil {
-			return nil, errors.Wrap(err, "error NewEvent")
+			return nil, errors.Wrap(err, "error newEvent")
 		}
 		result = append(result, event)
 	}
@@ -160,18 +160,24 @@ func (s *calendarService) Insert(ctx context.Context, calendarID string, event *
 		return nil, errors.Wrap(err, "error Events.Insert")
 	}
 
-	result, err := NewEvent(resp)
+	result, err := newEvent(resp)
 	if err != nil {
-		return nil, errors.Wrap(err, "error NewEvent")
+		return nil, errors.Wrap(err, "error newEvent")
 	}
 	return result, nil
 }
 
-func (s *calendarService) Patch(ctx context.Context, calendarID string, event *Event) (*Event, error) {
-	ev := &calendar.Event{
-		Id:          event.ID,
-		Summary:     event.Summary,
-		Description: event.Description,
+func (s *calendarService) Update(ctx context.Context, calendarID string, event *Event) (*Event, error) {
+	ev, err := s.get(ctx, calendarID, event.ID)
+	if err != nil {
+		return nil, errors.Wrap(err, "error get")
+	}
+
+	if event.Summary != "" {
+		ev.Summary = event.Summary
+	}
+	if event.Description != "" {
+		ev.Description = event.Description
 	}
 	if !event.StartTime.IsZero() {
 		ev.Start.DateTime = event.StartTime.Format(time.RFC3339)
@@ -179,7 +185,7 @@ func (s *calendarService) Patch(ctx context.Context, calendarID string, event *E
 	if !event.EndTime.IsZero() {
 		ev.End.DateTime = event.EndTime.Format(time.RFC3339)
 	}
-	req := s.cs.Events.Patch(calendarID, ev.Id, ev)
+	req := s.cs.Events.Update(calendarID, ev.Id, ev)
 
 	retrier := s.policy.Start(ctx)
 	var resp *calendar.Event
@@ -195,14 +201,36 @@ func (s *calendarService) Patch(ctx context.Context, calendarID string, event *E
 				continue
 			}
 		}
-		return nil, errors.Wrap(err, "error Events.Insert")
+		return nil, errors.Wrap(err, "error Events.Update")
 	}
 
-	result, err := NewEvent(resp)
+	result, err := newEvent(resp)
 	if err != nil {
-		return nil, errors.Wrap(err, "error NewEvent")
+		return nil, errors.Wrap(err, "error newEvent")
 	}
 	return result, nil
+}
+
+func (s *calendarService) get(ctx context.Context, calendarID string, eventID string) (*calendar.Event, error) {
+	req := s.cs.Events.Get(calendarID, eventID)
+	retrier := s.policy.Start(ctx)
+	var ev *calendar.Event
+	for retrier.Continue() {
+		var err error
+		ev, err = req.Context(ctx).Do()
+		if err == nil {
+			break
+		}
+		if apiError, ok := err.(*googleapi.Error); ok {
+			if apiError.Code == http.StatusTooManyRequests {
+				log.Printf("[WARN] reached to Too Many Requests: calendar_id=%s", calendarID)
+				continue
+			}
+		}
+		return nil, errors.Wrap(err, "error Events.Get")
+	}
+
+	return ev, nil
 }
 
 func (s *calendarService) Delete(ctx context.Context, calendarID, eventID string) error {
