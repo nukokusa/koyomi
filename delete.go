@@ -17,7 +17,7 @@ func (k *Koyomi) Delete(ctx context.Context, opt *DeleteOption) error {
 		return errors.Wrap(err, "error Delete")
 	}
 
-	log.Printf("[DEBUG] deleted event: CalendarID=%s, ID=%s", opt.CalendarID, opt.ID)
+	log.Printf("[DEBUG] deleted event: calendar_id=%s, id=%s", opt.CalendarID, opt.ID)
 
 	return nil
 }

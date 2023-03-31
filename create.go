@@ -49,7 +49,7 @@ func (k *Koyomi) Create(ctx context.Context, opt *CreateOption) error {
 		return errors.Wrap(err, "error Insert")
 	}
 
-	log.Printf("[DEBUG] inserted event: CalendarID=%s, ID=%s", opt.CalendarID, event.ID)
+	log.Printf("[DEBUG] inserted event: calendar_id=%s, id=%s", opt.CalendarID, event.ID)
 
 	if err := json.NewEncoder(k.stdout).Encode(event); err != nil {
 		return errors.Wrap(err, "error Encode")
