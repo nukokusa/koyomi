@@ -65,8 +65,13 @@ type CalendarService interface {
 }
 
 type calendarService struct {
-	cs     *calendar.Service
-	policy retry.Policy
+	cs *calendar.Service
+}
+
+var policy = retry.Policy{
+	MinDelay: time.Second,
+	MaxDelay: 100 * time.Second,
+	MaxCount: 10,
 }
 
 func newCalendarService(ctx context.Context, credentialPath string) (CalendarService, error) {
@@ -74,15 +79,7 @@ func newCalendarService(ctx context.Context, credentialPath string) (CalendarSer
 	if err != nil {
 		return nil, errors.Wrap(err, "error calendar.NewService")
 	}
-	policy := retry.Policy{
-		MinDelay: time.Second,
-		MaxDelay: 100 * time.Second,
-		MaxCount: 10,
-	}
-	return &calendarService{
-		cs:     cs,
-		policy: policy,
-	}, nil
+	return &calendarService{cs: cs}, nil
 }
 
 func (s *calendarService) List(ctx context.Context, calendarID string, startTime, endTime time.Time) ([]*Event, error) {
@@ -95,7 +92,7 @@ func (s *calendarService) List(ctx context.Context, calendarID string, startTime
 
 	pageToken := ""
 	for {
-		retrier := s.policy.Start(ctx)
+		retrier := policy.Start(ctx)
 		var resp *calendar.Events
 		for retrier.Continue() {
 			var err error
@@ -143,7 +140,7 @@ func (s *calendarService) Insert(ctx context.Context, calendarID string, event *
 	}
 	req := s.cs.Events.Insert(calendarID, ev)
 
-	retrier := s.policy.Start(ctx)
+	retrier := policy.Start(ctx)
 	var resp *calendar.Event
 	for retrier.Continue() {
 		var err error
@@ -187,7 +184,7 @@ func (s *calendarService) Update(ctx context.Context, calendarID string, event *
 	}
 	req := s.cs.Events.Update(calendarID, ev.Id, ev)
 
-	retrier := s.policy.Start(ctx)
+	retrier := policy.Start(ctx)
 	var resp *calendar.Event
 	for retrier.Continue() {
 		var err error
@@ -213,7 +210,7 @@ func (s *calendarService) Update(ctx context.Context, calendarID string, event *
 
 func (s *calendarService) get(ctx context.Context, calendarID string, eventID string) (*calendar.Event, error) {
 	req := s.cs.Events.Get(calendarID, eventID)
-	retrier := s.policy.Start(ctx)
+	retrier := policy.Start(ctx)
 	var ev *calendar.Event
 	for retrier.Continue() {
 		var err error
@@ -235,7 +232,7 @@ func (s *calendarService) get(ctx context.Context, calendarID string, eventID st
 
 func (s *calendarService) Delete(ctx context.Context, calendarID, eventID string) error {
 	req := s.cs.Events.Delete(calendarID, eventID)
-	retrier := s.policy.Start(ctx)
+	retrier := policy.Start(ctx)
 	for retrier.Continue() {
 		err := req.Context(ctx).Do()
 		if err == nil {
