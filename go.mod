@@ -1,6 +1,6 @@
 module github.com/nukokusa/koyomi
 
-go 1.20
+go 1.21
 
 require (
 	github.com/Songmu/flextime v0.1.0
