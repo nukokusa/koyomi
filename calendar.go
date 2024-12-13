@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/pkg/errors"
-	"github.com/shogo82148/go-retry"
+	"github.com/shogo82148/go-retry/v2"
 	"github.com/tkuchiki/parsetime"
 	"google.golang.org/api/calendar/v3"
 	"google.golang.org/api/googleapi"
