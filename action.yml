@@ -1,0 +1,20 @@
+name: koyomi
+description: koyomi
+inputs:
+  version:
+    description: version
+    required: true
+runs:
+  using: composite
+  steps:
+    - id: install
+      shell: bash
+      run: |
+        tmpDir=$(mktemp -d)
+        cd ${tmpDir}
+        wget -O koyomi.tar.gz https://github.com/nukokusa/koyomi/releases/download/v${{ inputs.version }}/koyomi_${{ inputs.version }}_linux_amd64.tar.gz
+        tar xf koyomi.tar.gz
+        sudo install koyomi /usr/local/bin/
+        rm -rf koyomi.tar.gz
+        cd
+        rm -rf ${tmpDir}
