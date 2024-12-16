@@ -1,0 +1,14 @@
+name: release
+on:
+  pull_request:
+    branches:
+      - feature/composite-action-test
+jobs:
+  composite-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: nukokusa/koyomi@v1
+        with:
+          version: 0.1.5
+      - run: |
+          which koyomi
