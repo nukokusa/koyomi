@@ -1,8 +1,5 @@
 name: release
-on:
-  pull_request:
-    branches:
-      - feature/composite-action-test
+on: pull_request
 jobs:
   composite-test:
     runs-on: ubuntu-latest
