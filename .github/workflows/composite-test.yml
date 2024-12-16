@@ -1,0 +1,14 @@
+name: ci
+on:
+  pull_request:
+    branches:
+      - master
+jobs:
+  composite-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: nukokusa/koyomi@v1
+        with:
+          version: 0.1.5
+      - run: |
+          which koyomi
